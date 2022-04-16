@@ -33,7 +33,7 @@ include(${_project_options_SOURCE_DIR}/Index.cmake)
 # run_vcpkg()
 
 # Set the project name and language
-project(kCAD VERSION 0.0.1 DESCRIPTION "Best CAD ever" LANGUAGES CXX C)
+project(xK VERSION 0.0.1 DESCRIPTION "GUI framework based on Vulkan graphics API" LANGUAGES CXX C)
 
 set(GIT_SHA
     "Unknown"
@@ -93,8 +93,8 @@ dynamic_project_options(
   # CONAN_OPTIONS    # Extra options to pass to conan
   # MSVC_WARNINGS    # Override the defaults for the MSVC warnings
   # CLANG_WARNINGS   # Override the defaults for the CLANG warnings
-  # GCC_WARNINGS     # Override the defaults for the GCC warnings
-  # CPPCHECK_OPTIONS # Override the defaults for CppCheck
+  GCC_WARNINGS     # Override the defaults for the GCC warnings
+  CPPCHECK_OPTIONS # Override the defaults for CppCheck
 )
 
 target_compile_features(project_options INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -131,7 +131,7 @@ set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT intro)
 
 # Add other targets that you want installed here, be default we just package the one executable
 # we know we want to ship
-package_project(TARGETS intro)
+package_project(TARGETS xgk_app)
 
 # Experience shows that explicit package naming can help make it easier to sort
 # out potential ABI related issues before they start, while helping you
