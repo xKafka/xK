@@ -3,6 +3,7 @@
 
 #include <docopt/docopt.h>
 #include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 
 // This file will be generated automatically when you run the CMake configuration step.
 // It creates a namespace called `kCAD`.

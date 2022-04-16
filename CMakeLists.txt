@@ -33,12 +33,7 @@ include(${_project_options_SOURCE_DIR}/Index.cmake)
 # run_vcpkg()
 
 # Set the project name and language
-project(
-  kCAD
-  VERSION 0.0.1
-  DESCRIPTION ""
-  HOMEPAGE_URL "https://github.com/xKafka/kCAD"
-  LANGUAGES CXX C)
+project(kCAD VERSION 0.0.1 DESCRIPTION "Best CAD ever" LANGUAGES CXX C)
 
 set(GIT_SHA
     "Unknown"
@@ -50,6 +45,7 @@ string(
             GIT_SHORT_SHA)
 
 get_property(BUILDING_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
 if(BUILDING_MULTI_CONFIG)
   if(NOT CMAKE_BUILD_TYPE)
     # Make sure that all supported configuration types have their
@@ -91,7 +87,9 @@ dynamic_project_options(
   # globally included and they can mask other errors
   PCH_HEADERS
   <vector>
-  <string> # This is a list of headers to pre-compile, here are some common ones
+  <string>
+  <array>
+  <spdlog/spdlog.h>
   # CONAN_OPTIONS    # Extra options to pass to conan
   # MSVC_WARNINGS    # Override the defaults for the MSVC warnings
   # CLANG_WARNINGS   # Override the defaults for the CLANG warnings
@@ -111,8 +109,7 @@ add_subdirectory(src)
 option(ENABLE_TESTING "Enable the tests" ON)
 if(ENABLE_TESTING)
   enable_testing()
-  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr
-testing")
+  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
   add_subdirectory(test)
 endif()
 
