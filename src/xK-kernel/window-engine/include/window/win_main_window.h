@@ -13,7 +13,7 @@ namespace xgk::win
     {
         using Parent = GenericWindow<true, true>;
 
-        void keyPressedEvent(Key key, int scancode, int action, int mods) override
+        void keyPressedEvent(Key key, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) override
         {
             log::info("{}", toAscii(key));
         }

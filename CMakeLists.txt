@@ -67,6 +67,10 @@ if(BUILDING_MULTI_CONFIG)
   endif()
 endif()
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+
+set(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE")
+
 include(${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake)
 
 # defaulted_project_options sets recommended defaults and provides user and developer

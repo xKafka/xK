@@ -54,7 +54,7 @@ namespace xgk::win
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), nullptr, nullptr);
+        m_window = glfwCreateWindow(static_cast<int>(m_width), static_cast<int>(m_height), m_title.c_str(), nullptr, nullptr);
 
         glfwSetWindowUserPointer(m_window, this);
 
@@ -70,7 +70,7 @@ namespace xgk::win
     {
         auto _this = static_cast<GenericWindow*>(glfwGetWindowUserPointer(window));
 
-        _this->resizedEvent(width, height);
+        _this->resizedEvent(static_cast<u32>(width), static_cast<u32>(height));
     }
 
     template<bool IsMainWindow, bool IsValidationEnabled>
@@ -157,9 +157,7 @@ namespace xgk::win
 
         u32 extensionCount = 0;
 
-        const char** extensions;
-
-        extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
+        const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
 
         std::vector<const char*> returnValue(extensions, extensions + extensionCount);
 

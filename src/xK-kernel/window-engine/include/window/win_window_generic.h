@@ -9,7 +9,6 @@
 #include <GLFW/glfw3.h>
 #include <array>
 #include <string>
-#include <thread>
 #include <functional>
 #include <limits>
 #include <utility/literal.h>
@@ -65,7 +64,7 @@ namespace xgk::win
             return GenericWindow{ Width, Height, title };
         }
 
-        ~GenericWindow() noexcept;
+        virtual ~GenericWindow() noexcept;
 
         void close();
 
@@ -90,9 +89,9 @@ namespace xgk::win
     private:
         std::string m_title{};
 
-        WindowEngine* m_window{};
-
         u32 m_width{}, m_height{};
+
+        WindowEngine* m_window{};
 
         bool m_isShown{};
     };

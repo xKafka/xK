@@ -110,17 +110,15 @@ namespace xgk::vulkan
             using Severenity = vk::DebugUtilsMessageSeverityFlagBitsEXT;
             using Type = vk::DebugUtilsMessageTypeFlagBitsEXT;
 
-            static vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo
-            {
-                .messageSeverity =  Severenity::eVerbose | Severenity::eError | Severenity::eWarning,
-                .messageType = Type::eGeneral | Type::ePerformance | Type::eValidation,
-                .pfnUserCallback = debugCallback,
-                .pUserData = nullptr
-            };
+            static auto debugMessengerCreateInfo = vk::DebugUtilsMessengerCreateInfoEXT{}
+            .setMessageSeverity(Severenity::eVerbose | Severenity::eError | Severenity::eWarning)
+            .setMessageType(Type::eGeneral | Type::ePerformance | Type::eValidation)
+            .setPfnUserCallback(debugCallback)
+            .setPUserData(nullptr);
 
             instanceCreateInfo.setEnabledLayerCount(static_cast<u32>(ValidationLayers.size()));
             instanceCreateInfo.setPpEnabledLayerNames(ValidationLayers.data());
-            instanceCreateInfo.setPNext((VkDebugUtilsMessengerCreateInfoEXT*) &debugMessengerCreateInfo);
+            instanceCreateInfo.setPNext(&debugMessengerCreateInfo);
         }
 
         m_instance = vk::createInstanceUnique(instanceCreateInfo);
@@ -337,13 +335,6 @@ namespace xgk::vulkan
     }
 
     template<bool ValidationLayersEnabled>
-    void /*!Done */
-    GpuWrapper<ValidationLayersEnabled>::createSurface()
-    {
-        m_surface = m_window.lock()->createVulkanWindowSurface(m_instance.get());
-    }
-
-    template<bool ValidationLayersEnabled>
     bool /*!Done */
     GpuWrapper<ValidationLayersEnabled>::isGpuGood(const vk::PhysicalDevice& gpu, vk::QueueFlags operationsToBeSupported) const
     {
@@ -466,7 +457,7 @@ namespace xgk::vulkan
     vk::Format /*! Done*/
     GpuWrapper<ValidationLayersEnabled>::findSupportedFormat(const std::vector<vk::Format>& formats, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
    {
-        for (const auto& format : candidates)
+        for (const auto& format : formats)
         {
             const auto properties = m_gpu.getFormatProperties(format);
 
@@ -481,14 +472,13 @@ namespace xgk::vulkan
 
     template<bool ValidationLayersEnabled>
     u32
-    GpuWrapper<ValidationLayersEnabled>::findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
+    GpuWrapper<ValidationLayersEnabled>::findMemoryType(u32 typeFilter, vk::MemoryPropertyFlagBits properties)
     {
-        VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(m_gpu, &memProperties);
+        const auto memoryProperties = m_gpu.getMemoryProperties();
 
-        for (u32 i = 0; i < memProperties.memoryTypeCount; i++)
+        for(const auto& memoryType : memoryProperties.memoryTypes)
         {
-            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            if((typeFilter & (1 << i)) && (memoryType.propertyFlags & properties) == properties)
             {
                 return i;
             }
@@ -506,7 +496,7 @@ namespace xgk::vulkan
         .setUsage(usage)
         .setSharingMode(vk::SharingMode::eExclusive);
 
-        vk::Buffer vertexBuffer = m_logicalDevice.createBuffer(bufferInfo);
+        vk::Buffer vertexBuffer = m_logicalDevice.createBuffer(bufferCreateInfo);
 
         if (!vertexBuffer)
         {
@@ -532,123 +522,119 @@ namespace xgk::vulkan
     }
 
     template<bool ValidationLayersEnabled>
-    VkCommandBuffer
+    vk::CommandBuffer
     GpuWrapper<ValidationLayersEnabled>::beginSingleTimeCommands()
     {
-        VkCommandBufferAllocateInfo allocInfo
-        {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-            .commandBufferCount = 1
-        };
+        const auto commandAllocateInfo = vk::CommandBufferAllocateInfo{}
+        .setLevel(vk::CommandBufferLevel::ePrimary)
+        .setCommandBufferCount(1)
+        .setCommandPool(m_commandPool);
 
-        allocInfo.commandPool = m_commandPool;
+        auto commandBuffers = m_logicalDevice.allocateCommandBuffers(commandAllocateInfo);
 
-        VkCommandBuffer commandBuffer;
+        static constexpr vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eOneTimeSubmit };
 
-        vkAllocateCommandBuffers(m_logicalDevice, &allocInfo, &commandBuffer);
+        auto firstAllocatedBuffer = commandBuffers.front();
 
-        constexpr VkCommandBufferBeginInfo beginInfo
-        {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-            .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-        };
+        firstAllocatedBuffer.begin(beginInfo);
 
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-        return commandBuffer;
+        return firstAllocatedBuffer;
     }
 
     template<bool ValidationLayersEnabled>
     void
-    GpuWrapper<ValidationLayersEnabled>::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+    GpuWrapper<ValidationLayersEnabled>::endSingleTimeCommands(vk::CommandBuffer* commandBuffer)
     {
-        vkEndCommandBuffer(commandBuffer);
+        commandBuffer->end();
 
-        VkSubmitInfo submitInfo
+        const vk::SubmitInfo submitInfo
         {
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .commandBufferCount = 1,
-            .pCommandBuffers = &commandBuffer
+            {},
+            {},
+            {},
+            1,
+            commandBuffer
         };
 
-        vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_graphicsQueue);
+        m_graphicsQueue.submit(1, &submitInfo, VK_NULL_HANDLE);
 
-        vkFreeCommandBuffers(m_logicalDevice, m_commandPool, 1, &commandBuffer);
+        m_graphicsQueue.waitIdle();
+
+        m_logicalDevice.freeCommandBuffers(m_commandPool, 1, commandBuffer);
     }
 
     template<bool ValidationLayersEnabled>
     void
-    GpuWrapper<ValidationLayersEnabled>::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    GpuWrapper<ValidationLayersEnabled>::copyBuffer(const vk::Buffer& src, vk::Buffer* dst, u64 size)
     {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        auto commandBuffer = beginSingleTimeCommands();
 
-        VkBufferCopy copyRegion
+        const vk::BufferCopy copyRegion
         {
-            .srcOffset = 0,
-            .dstOffset = 0,
-            .size = size
+            0,
+            0,
+            size
         };
 
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+        commandBuffer.copyBuffer(src, *dst, 1, &copyRegion);
 
-        endSingleTimeCommands(commandBuffer);
+        endSingleTimeCommands(&commandBuffer);
     }
 
     template<bool ValidationLayersEnabled>
     void
-    GpuWrapper<ValidationLayersEnabled>::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width, u32 height, u32 layerCount)
+    GpuWrapper<ValidationLayersEnabled>::copyBufferToImage(const vk::Buffer& src, vk::Image* image, u32 width, u32 height, u32 layerCount)
     {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        auto commandBuffer = beginSingleTimeCommands();
 
-        VkBufferImageCopy region
+        vk::BufferImageCopy region
         {
-            .bufferOffset = 0,
-            .bufferRowLength = 0,
-            .bufferImageHeight = 0,
-            .imageOffset = { 0, 0, 0 },
-            .imageExtent = { width, height, 1 }
+            0,
+            0,
+            0,
+            { 0, 0, 0 },
+            { width, height, 1 }
         };
 
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = 0;
-        region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = layerCount;
+        region.imageSubresource.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        region.imageSubresource.setMipLevel(0);
+        region.imageSubresource.setBaseArrayLayer(0);
+        region.imageSubresource.setLayerCount(layerCount);
 
-        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, 1, &region);
 
-        endSingleTimeCommands(commandBuffer);
+        endSingleTimeCommands(&commandBuffer);
     }
 
     template<bool ValidationLayersEnabled>
-    void
-    GpuWrapper<ValidationLayersEnabled>::createImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory)
+    std::tuple<vk::Image, vk::DeviceMemory>
+    GpuWrapper<ValidationLayersEnabled>::createImageWithInfo(const vk::ImageCreateInfo& info, vk::MemoryPropertyFlagBits properties)
     {
-        if (vkCreateImage(m_logicalDevice, &imageInfo, nullptr, &image) != VK_SUCCESS)
+        auto image = m_logicalDevice.createImage(info);
+
+        if(!image)
         {
             throw Exception::InstanceError("failed to create image!");
         }
 
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(m_logicalDevice, image, &memRequirements);
+        const auto memoryRequirements = m_logicalDevice.getImageMemoryRequirements(image);
 
-        VkMemoryAllocateInfo allocInfo
+        vk::MemoryAllocateInfo memoryAllocateInfo
         {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-            .allocationSize = memRequirements.size,
-            .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)
+            memoryRequirements.size,
+            findMemoryType(memoryRequirements.memoryTypeBits, properties)
         };
 
-        if (vkAllocateMemory(m_logicalDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+        auto imageMemory = m_logicalDevice.allocateMemory(memoryAllocateInfo);
+
+        if(!imageMemory)
         {
             throw Exception::InstanceError("failed to allocate image memory!");
         }
 
-        if (vkBindImageMemory(m_logicalDevice, image, imageMemory, 0) != VK_SUCCESS)
-        {
-            throw Exception::InstanceError("failed to bind image memory!");
-        }
+        m_logicalDevice.bindImageMemory(image, imageMemory, 0);
+
+        return { image, imageMemory };
     }
 
     template<bool ValidationLayersEnabled>

@@ -16,9 +16,9 @@ namespace xgk::vulkan
 {
     struct SwapChainSupportDetails
     {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
+        vk::SurfaceCapabilitiesKHR capabilities;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR> presentModes;
     };
 
     struct QueueFamilyIndices
@@ -42,7 +42,7 @@ namespace xgk::vulkan
         QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice& gpu, vk::QueueFlags operationsToBeSupported) const;
 
 
-        u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+        u32 findMemoryType(u32 typeFilter, vk::MemoryPropertyFlagBits properties);
 
         // helper functions
 
@@ -66,13 +66,13 @@ namespace xgk::vulkan
 
         vk::CommandBuffer beginSingleTimeCommands();
 
-        void endSingleTimeCommands(vk::CommandBuffer cmdBuffer);
+        void endSingleTimeCommands(vk::CommandBuffer* commandBuffer);
 
-        void copyBuffer(const vk::Buffer& src, const vk::Buffer& dst, u64 size);
+        void copyBuffer(const vk::Buffer& src, vk::Buffer* dst, u64 size);
 
-        void copyBufferToImage(const vk::Buffer& src, vk::Image& image, u32 width, u32 height, u32 layerCount);
+        void copyBufferToImage(const vk::Buffer& src, vk::Image* image, u32 width, u32 height, u32 layerCount);
 
-        void createImageWithInfo(const vk::ImageCreateInfo& info, vk::MemoryPropertyFlags properties, vk::Image& image, vk::DeviceMemory& imageMemory);
+        std::tuple<vk::Image, vk::DeviceMemory> createImageWithInfo(const vk::ImageCreateInfo& info, vk::MemoryPropertyFlagBits properties);
 
         void cleanUp();
 
