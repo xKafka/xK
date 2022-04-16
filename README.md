@@ -1,4 +1,4 @@
-# kCAD
+# xK
 
 [![ci](https://github.com/xKafka/kCAD/actions/workflows/ci.yml/badge.svg)](https://github.com/xKafka/kCAD/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/xKafka/kCAD/branch/main/graph/badge.svg)](https://codecov.io/gh/xKafka/kCAD)
@@ -8,7 +8,7 @@ LGTM Has to be set up manually after template is created:
 
 [![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/github/xKafka/kCAD)](https://lgtm.com/projects/g/xKafka/kCAD/context:cpp)
 
-## About kCAD
+## About xK
 
 
 
