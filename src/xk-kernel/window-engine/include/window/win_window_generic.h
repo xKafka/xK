@@ -38,12 +38,12 @@ namespace xk::win
 
     using WindowEngine = GLFWwindow;
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApi, bool IsValidationEnabled>
     class GenericWindow
     {
-        static constexpr bool IsVulkanUsed() { return GraphicsApiHandler::Type == graphics_engine::Vulkan; }
+        static constexpr bool IsGraphicsApiVulkanType() { return GraphicsApi::Type == graphics_engine::Vulkan; }
 
-        static constexpr bool IsOpenGl() { return GraphicsApiHandler::Type == graphics_engine::OpenGL; }
+        static constexpr bool IsGraphicsApiOpenGlType() { return GraphicsApi::Type == graphics_engine::OpenGL; }
 
         static void frameBufferResizeCallback(WindowEngine* window, int width, int height);
 
@@ -61,7 +61,7 @@ namespace xk::win
         void init();
 
     public:
-        GenericWindow(std::weak_ptr<GraphicsApiHandler> graphicsEngine, u32 width, u32 height, std::string_view title);
+        GenericWindow(std::weak_ptr<GraphicsApi> graphicsEngine, u32 width, u32 height, std::string_view title);
 
         virtual ~GenericWindow() noexcept;
 
@@ -83,10 +83,8 @@ namespace xk::win
 
         [[nodiscard]] VkSurfaceKHR createVulkanWindowSurface(VkInstance vulkanInstance) const;
 
-        std::vector<const char*> requiredWindowExtensions() const;
-
     private:
-        std::weak_ptr<GraphicsApiHandler> m_graphicsEngine;
+        std::weak_ptr<GraphicsApi> m_graphicsEngine;
 
         std::string m_title{};
 
@@ -97,29 +95,16 @@ namespace xk::win
         bool m_isShown{};
     };
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, true, true>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, true, true>;
+    extern template class GenericWindow<graphics_engine::gl::Core<true>, true>;
+    extern template class GenericWindow<graphics_engine::gl::Core<false>, true>;
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, true, false>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, true, false>;
+    extern template class GenericWindow<graphics_engine::gl::Core<true>, false>;
+    extern template class GenericWindow<graphics_engine::gl::Core<false>, false>;
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, false, true>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, false, true>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true>;
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, false, false>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, false, false>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true, true>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true, true>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true, false>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true, false>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false, true>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false, true>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false, false>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false, false>;
-
+    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false>;
 }
 #endif //XK_XK_WINDOWENGINE_INCLUDE_WINDOW_GK_WINDOW_H_

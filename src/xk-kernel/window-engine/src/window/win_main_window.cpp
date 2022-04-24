@@ -6,4 +6,11 @@
 
 namespace xk::win
 {
+
+     template class MainWindow<graphics_engine::gl::Core<true>, true>;
+     template class MainWindow<graphics_engine::gl::Core<false>, true>;
+
+     template class MainWindow<graphics_engine::vulkan::Core<true>, true>;
+     template class MainWindow<graphics_engine::vulkan::Core<false>, true>;
+
 }

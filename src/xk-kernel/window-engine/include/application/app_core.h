@@ -20,9 +20,13 @@ namespace xk::application
 #endif
         static constexpr graphics_engine::GraphicsApi UsedGraphicsApi{ graphics_engine::Vulkan };
 
-        using GEngine = graphics_engine::GraphicsEngine<UsedGraphicsApi, ValidationLayersEnable>;
+        using GraphicsApi = graphics_engine::GraphicsEngine<UsedGraphicsApi, ValidationLayersEnable>::Api;
 
-        using MainWindow = win::MainWindow<GEngine>;
+        using Window = win::GenericWindow<GraphicsApi, ValidationLayersEnable>;
+
+        using MainWindow = win::MainWindow<GraphicsApi, ValidationLayersEnable>;
+
+        std::weak_ptr<MainWindow> getMainWindow();
 
     public:
         Core(int argc, const char* argv[]);
@@ -30,9 +34,11 @@ namespace xk::application
         void run();
 
     private:
-        std::shared_ptr<GEngine> m_graphicsEngine;
+        std::shared_ptr<GraphicsApi> m_graphicsEngine;
 
         std::shared_ptr<MainWindow> m_mainWindow;
+
+        std::vector<std::shared_ptr<Window>> m_widgets;
     };
 }
 

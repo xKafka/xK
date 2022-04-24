@@ -6,8 +6,8 @@
 
 namespace xk::win
 {
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::GenericWindow(std::weak_ptr<GraphicsApiHandler> graphicsEngine, u32 width, u32 height, std::string_view title)
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::GenericWindow(std::weak_ptr<GraphicsApiHandler> graphicsEngine, u32 width, u32 height, std::string_view title)
             : m_graphicsEngine{ graphicsEngine }
             , m_title{ title }
             , m_width{ width }
@@ -18,16 +18,16 @@ namespace xk::win
         init();
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::~GenericWindow() noexcept
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::~GenericWindow() noexcept
     {
         glfwDestroyWindow(m_window);
         glfwTerminate();
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::close()
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::close()
     {
         if(m_isShown)
         {
@@ -42,9 +42,9 @@ namespace xk::win
         }
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::init()
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::init()
     {
         if constexpr(IsValidationEnabled)
         {
@@ -53,7 +53,7 @@ namespace xk::win
 
         glfwInit();
 
-        if constexpr (IsVulkanUsed())
+        if constexpr (IsGraphicsApiVulkanType())
         {
             if(!glfwVulkanSupported())
             {
@@ -64,7 +64,7 @@ namespace xk::win
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        if constexpr(IsOpenGl())
+        if constexpr(IsGraphicsApiOpenGlType())
         {
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         }
@@ -79,36 +79,36 @@ namespace xk::win
         glfwSetWindowCloseCallback(m_window, windowCloseCallback);
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::frameBufferResizeCallback(WindowEngine* window, int width, int height)
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::frameBufferResizeCallback(WindowEngine* window, int width, int height)
     {
         auto _this = static_cast<GenericWindow*>(glfwGetWindowUserPointer(window));
 
         _this->resizedEvent(static_cast<u32>(width), static_cast<u32>(height));
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::keyHandlerCallBack(WindowEngine* window, int key, int scancode, int action, int mods)
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::keyHandlerCallBack(WindowEngine* window, int key, int scancode, int action, int mods)
     {
         auto _this = static_cast<GenericWindow*>(glfwGetWindowUserPointer(window));
 
         _this->keyPressedEvent(static_cast<Key>(key), scancode, action, mods);
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::windowCloseCallback(WindowEngine* window)
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::windowCloseCallback(WindowEngine* window)
     {
         auto _this = static_cast<GenericWindow*>(glfwGetWindowUserPointer(window));
 
         _this->closeEvent();
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::resize(u32 width, u32 height)
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::resize(u32 width, u32 height)
     {
         //TODO check if this is not more then size of desktop ...
         m_width = width;
@@ -117,9 +117,9 @@ namespace xk::win
         glfwSetWindowSize(m_window, static_cast<int>(width), static_cast<int>(height));
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::show()
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::show()
     {
         if(!m_isShown)
         {
@@ -134,16 +134,16 @@ namespace xk::win
         }
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::showFullWindow()
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::showFullWindow()
     {
 
     }
 
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     VkSurfaceKHR
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::createVulkanWindowSurface(VkInstance vulkanInstance) const
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::createVulkanWindowSurface(VkInstance vulkanInstance) const
     {
         if constexpr (IsValidationEnabled)
         {
@@ -160,69 +160,22 @@ namespace xk::win
         return surface;
     }
 
-
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
-    std::vector<const char*>
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::requiredWindowExtensions() const
-    {
-        if constexpr(IsValidationEnabled)
-        {
-            log::info("Obtaining required window extensions");
-        }
-
-        u32 extensionCount = 0;
-
-        const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
-
-        std::vector<const char*> returnValue(extensions, extensions + extensionCount);
-
-        if constexpr(IsValidationEnabled)
-        {
-            returnValue.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-            log::info("Extensions:");
-
-            for(const auto& name : returnValue)
-            {
-                log::info("{}", name);
-            }
-        }
-
-        if(returnValue.empty())
-        {
-            throw Exception::WindowError("Could not obtain extensions");
-        }
-
-        return returnValue;
-    }
-    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    template<typename GraphicsApiHandler, bool IsValidationEnabled>
     void
-    GenericWindow<GraphicsApiHandler, IsMainWindow, IsValidationEnabled>::update()
+    GenericWindow<GraphicsApiHandler, IsValidationEnabled>::update()
     {
         glfwPollEvents();
     }
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, true, true>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, true, true>;
+    template class GenericWindow<graphics_engine::gl::Core<true>, true>;
+    template class GenericWindow<graphics_engine::gl::Core<false>, true>;
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, true, false>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, true, false>;
+    template class GenericWindow<graphics_engine::gl::Core<true>, false>;
+    template class GenericWindow<graphics_engine::gl::Core<false>, false>;
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, false, true>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, false, true>;
+    template class GenericWindow<graphics_engine::vulkan::Core<true>, true>;
+    template class GenericWindow<graphics_engine::vulkan::Core<false>, true>;
 
-    extern template class GenericWindow<graphics_engine::gl::Core<true>, false, false>;
-    extern template class GenericWindow<graphics_engine::gl::Core<false>, false, false>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true, true>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true, true>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true, false>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true, false>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false, true>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false, true>;
-
-    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false, false>;
-    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false, false>;
+    template class GenericWindow<graphics_engine::vulkan::Core<true>, false>;
+    template class GenericWindow<graphics_engine::vulkan::Core<false>, false>;
 }
