@@ -37,7 +37,7 @@ namespace xgk::vulkan
          *    for this purpose has implemented physical queue, graphics queue and command pool
          */
 
-        using ParentWindow = xgk::win::MainWindow;
+        using ParentWindow = xk::win::MainWindow;
 
         QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice& gpu, vk::QueueFlags operationsToBeSupported) const;
 

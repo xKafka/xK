@@ -1,0 +1,125 @@
+//
+// Created by kafka on 2/3/2022.
+//
+
+#ifndef XK_XK_WINDOWENGINE_INCLUDE_WINDOW_GK_WINDOW_H_
+#define XK_XK_WINDOWENGINE_INCLUDE_WINDOW_GK_WINDOW_H_
+
+#define GLFW_INCLUDE_VULKAN
+/*external*/
+#include <GLFW/glfw3.h>
+#include <fmt/format.h>
+
+/*standard*/
+#include <array>
+#include <string>
+#include <functional>
+#include <limits>
+
+/*custom*/
+#include <utility/literal.h>
+#include <utility/log.h>
+
+#include <window/win_exceptions_generic.h>
+#include <window/win_keyboard.h>
+
+#include <xk-graphics-engine/xk-engine/graphics_engine.h>
+
+namespace xk::win
+{
+    namespace limits
+    {
+        static constexpr u32 MaxWidth{ 800 };
+
+        static constexpr u32 MaxHeight{ 600 };
+
+        static constexpr u32 WindowTitleMaxChars{ 64 };
+    }
+
+    using WindowEngine = GLFWwindow;
+
+    template<typename GraphicsApiHandler, bool IsMainWindow, bool IsValidationEnabled>
+    class GenericWindow
+    {
+        static constexpr bool IsVulkanUsed() { return GraphicsApiHandler::Type == graphics_engine::Vulkan; }
+
+        static constexpr bool IsOpenGl() { return GraphicsApiHandler::Type == graphics_engine::OpenGL; }
+
+        static void frameBufferResizeCallback(WindowEngine* window, int width, int height);
+
+        static void keyHandlerCallBack(WindowEngine* window, int key, int scancode, int action, int mods);
+
+        static void windowCloseCallback(WindowEngine* window);
+
+        virtual void keyPressedEvent(Key key, int scancode, int action, int mods) = 0;
+
+        virtual void resizedEvent(u32 width, u32 height) = 0;
+
+        virtual void closeEvent() = 0;
+
+    protected:
+        void init();
+
+    public:
+        GenericWindow(std::weak_ptr<GraphicsApiHandler> graphicsEngine, u32 width, u32 height, std::string_view title);
+
+        virtual ~GenericWindow() noexcept;
+
+        void close();
+
+        [[nodiscard]] inline bool shouldClose() const { return glfwWindowShouldClose(m_window); }
+
+        void resize(u32 width, u32 height);
+
+        void update();
+
+        void show();
+
+        void showFullWindow();
+
+        [[nodiscard]] constexpr inline auto width() const { return m_width; }
+
+        [[nodiscard]] constexpr inline auto height() const { return m_height; }
+
+        [[nodiscard]] VkSurfaceKHR createVulkanWindowSurface(VkInstance vulkanInstance) const;
+
+        std::vector<const char*> requiredWindowExtensions() const;
+
+    private:
+        std::weak_ptr<GraphicsApiHandler> m_graphicsEngine;
+
+        std::string m_title{};
+
+        u32 m_width{}, m_height{};
+
+        WindowEngine* m_window{};
+
+        bool m_isShown{};
+    };
+
+    extern template class GenericWindow<graphics_engine::gl::Core<true>, true, true>;
+    extern template class GenericWindow<graphics_engine::gl::Core<false>, true, true>;
+
+    extern template class GenericWindow<graphics_engine::gl::Core<true>, true, false>;
+    extern template class GenericWindow<graphics_engine::gl::Core<false>, true, false>;
+
+    extern template class GenericWindow<graphics_engine::gl::Core<true>, false, true>;
+    extern template class GenericWindow<graphics_engine::gl::Core<false>, false, true>;
+
+    extern template class GenericWindow<graphics_engine::gl::Core<true>, false, false>;
+    extern template class GenericWindow<graphics_engine::gl::Core<false>, false, false>;
+
+    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true, true>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true, true>;
+
+    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, true, false>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, true, false>;
+
+    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false, true>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false, true>;
+
+    extern template class GenericWindow<graphics_engine::vulkan::Core<true>, false, false>;
+    extern template class GenericWindow<graphics_engine::vulkan::Core<false>, false, false>;
+
+}
+#endif //XK_XK_WINDOWENGINE_INCLUDE_WINDOW_GK_WINDOW_H_
