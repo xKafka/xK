@@ -10,13 +10,11 @@
 namespace xk::application
 {
     Core::Core([[maybe_unused]] const int argc, [[maybe_unused]] const char* argv[])
-        : m_graphicsEngine{ GraphicsApi::createCore() }
+        : m_graphicsEngine{ std::make_shared<GraphicsApi>() }
         , m_mainWindow{ MainWindow::createMainWindow<700, 500>(m_graphicsEngine, "MainWindow") }
         , m_widgets{ }
     {
         m_graphicsEngine->setupForWindow(m_mainWindow);
-
-        //m_graphicsEngine->init();
     }
 
     std::weak_ptr<Core::MainWindow>

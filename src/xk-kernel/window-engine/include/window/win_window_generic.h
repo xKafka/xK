@@ -5,8 +5,9 @@
 #ifndef XK_XK_WINDOWENGINE_INCLUDE_WINDOW_GK_WINDOW_H_
 #define XK_XK_WINDOWENGINE_INCLUDE_WINDOW_GK_WINDOW_H_
 
-#define GLFW_INCLUDE_VULKAN
+
 /*external*/
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
 
