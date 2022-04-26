@@ -21,5 +21,7 @@ using f32 = float;
 using f64 = double;
 
 using Enum_t = u8;
+using Index_t = u32;
+using Size_t = u32;
 
 #endif //XK_LITERAL_H
