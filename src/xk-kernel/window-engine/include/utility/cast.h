@@ -27,4 +27,10 @@ inline constexpr auto to_f32(Type number)
     return static_cast<f32>(number);
 }
 
+template<Arithmetic T>
+inline constexpr auto Bad()
+{
+    return std::numeric_limits<T>::max();
+}
+
 #endif //CAST_H

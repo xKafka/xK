@@ -45,7 +45,7 @@ namespace xk::graphics_engine::vulkan
             m_swapChain = nullptr;
         }
 
-        for (u32 i{ 0 }; i < m_depthImages.size(); ++i)
+        for (Size_t i{ 0 }; i < m_depthImages.size(); ++i)
         {
             vkDestroyImageView(m_gpuWrapper. m_gpuWrapper(), m_depthImageViews[i], nullptr);
             vkDestroyImage(m_gpuWrapper. m_gpuWrapper(), m_depthImages[i], nullptr);
@@ -59,7 +59,7 @@ namespace xk::graphics_engine::vulkan
 
         vkDestroyRenderPass(m_gpuWrapper. m_gpuWrapper(), m_renderPass, nullptr);
 
-        for (u32 i{ 0 }; i < ImagesInFlight; ++i)
+        for (Size_t i{ 0 }; i < ImagesInFlight; ++i)
         {
             vkDestroySemaphore(m_gpuWrapper. m_gpuWrapper(), m_renderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(m_gpuWrapper. m_gpuWrapper(), m_imageAvailableSemaphores[i], nullptr);
@@ -69,7 +69,7 @@ namespace xk::graphics_engine::vulkan
 
     template<bool ValidationEnabled>
     VkResult
-    SwapChain<ValidationEnabled>::acquireNextImage(u32 *imageIndex)
+    SwapChain<ValidationEnabled>::acquireNextImage(Index_t *imageIndex)
     {
         vkWaitForFences(m_gpuWrapper. m_gpuWrapper(), 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
@@ -80,7 +80,7 @@ namespace xk::graphics_engine::vulkan
 
     template<bool ValidationEnabled>
     VkResult
-    SwapChain<ValidationEnabled>::submitCommandBuffers(const VkCommandBuffer *buffers, u32 *imageIndex)
+    SwapChain<ValidationEnabled>::submitCommandBuffers(const VkCommandBuffer *buffers, Index_t *imageIndex)
     {
         if (m_imagesInFlight[*imageIndex] != VK_NULL_HANDLE)
         {
@@ -143,7 +143,7 @@ namespace xk::graphics_engine::vulkan
         VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
-        u32 imageCount = swapChainSupport.capabilities.minImageCount + 1;
+        Size_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
         {
@@ -174,7 +174,7 @@ namespace xk::graphics_engine::vulkan
         if (indices.graphicsFamily != indices.presentFamily)
         {
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = static_cast<u32>(queueFamilyIndices.size());
+            createInfo.queueFamilyIndexCount = to_u32(queueFamilyIndices.size());
             createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
         }
         else
@@ -204,7 +204,7 @@ namespace xk::graphics_engine::vulkan
     {
         m_swapChainImageViews.resize(m_swapChainImages.size());
 
-        for (u32 i{ 0 }; i < m_swapChainImages.size(); ++i)
+        for (Index_t i{ 0 }; i < m_swapChainImages.size(); ++i)
         {
             VkImageViewCreateInfo viewInfo
             {
@@ -221,7 +221,7 @@ namespace xk::graphics_engine::vulkan
 
             if (vkCreateImageView(m_gpuWrapper. m_gpuWrapper(), &viewInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS)
             {
-            throw Exception::SwapChainError("failed to create texture image view!");
+                throw Exception::SwapChainError("failed to create texture image view!");
             }
         }
      }
@@ -289,7 +289,7 @@ namespace xk::graphics_engine::vulkan
         VkRenderPassCreateInfo renderPassInfo
         {
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-            .attachmentCount = static_cast<u32>(attachments.size()),
+            .attachmentCount = to_u32(attachments.size()),
             .pAttachments = attachments.data(),
             .subpassCount = 1,
             .pSubpasses = &subpass,
@@ -309,7 +309,7 @@ namespace xk::graphics_engine::vulkan
     {
         m_swapChainFramebuffers.resize(imageCount());
 
-        for (u32 i{ 0 }; i < imageCount(); ++i)
+        for (Index_t i{ 0 }; i < imageCount(); ++i)
         {
             std::array<VkImageView, 2> attachments = {m_swapChainImageViews[i], m_depthImageViews[i]};
 
@@ -318,7 +318,7 @@ namespace xk::graphics_engine::vulkan
             {
                 .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                 .renderPass = m_renderPass,
-                .attachmentCount = static_cast<u32>(attachments.size()),
+                .attachmentCount = to_u32(attachments.size()),
                 .pAttachments = attachments.data(),
                 .width = swapChainExtent.width,
                 .height = swapChainExtent.height,
@@ -343,7 +343,7 @@ namespace xk::graphics_engine::vulkan
         m_depthImageMemories.resize(imageCount());
         m_depthImageViews.resize(imageCount());
 
-        for (u32 i{ 0 }; i < m_depthImages.size(); ++i)
+        for (Index_t i{ 0 }; i < m_depthImages.size(); ++i)
         {
             VkImageCreateInfo imageInfo
             {
@@ -405,7 +405,7 @@ namespace xk::graphics_engine::vulkan
             .flags = VK_FENCE_CREATE_SIGNALED_BIT
         };
 
-        for (u32 i{ 0 }; i < ImagesInFlight; ++i)
+        for (Index_t i{ 0 }; i < ImagesInFlight; ++i)
         {
             if (vkCreateSemaphore(m_gpuWrapper.m_gpuWrapper(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS)
             {
@@ -469,7 +469,7 @@ namespace xk::graphics_engine::vulkan
     VkExtent2D
     SwapChain<ValidationEnabled>::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     {
-         if (capabilities.currentExtent.width != std::numeric_limits<u32>::max())
+         if (capabilities.currentExtent.width != Bad<u32>())
          {
              return capabilities.currentExtent;
          }

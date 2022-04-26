@@ -33,7 +33,7 @@ namespace xk::graphics_engine::vulkan
 
         using ParentWindow = win::MainWindow<Core<ValidationEnabled>, ValidationEnabled>;
 
-        static constexpr u32 ImagesInFlight{ 2 };
+        static constexpr Size_t ImagesInFlight{ 2 };
 
         VkFormat findDepthFormat();
 
@@ -55,7 +55,7 @@ namespace xk::graphics_engine::vulkan
         void createSyncObjects();
 
     public:
-        SwapChain(std::weak_ptr<GpuWrapper<ValidationEnabled>> gpuWrapper);
+        explicit SwapChain(std::weak_ptr<GpuWrapper<ValidationEnabled>> gpuWrapper);
 
         ~SwapChain();
 
@@ -107,26 +107,26 @@ namespace xk::graphics_engine::vulkan
         }
 
     private:
-        std::weak_ptr<InstanceT> m_gpuWrapper;
-        VkSwapchainKHR m_swapChain;
+        std::weak_ptr<InstanceT>    m_gpuWrapper;
+        VkSwapchainKHR              m_swapChain;
 
-        VkFormat m_swapChainImageFormat;
-        VkExtent2D m_swapChainExtent, m_windowExtent;
+        VkFormat                    m_swapChainImageFormat{};
+        VkExtent2D                  m_swapChainExtent, m_windowExtent{};
 
-        VkRenderPass m_renderPass;
+        VkRenderPass                m_renderPass{};
 
-        std::vector<VkFramebuffer> m_swapChainFramebuffers;
-        std::vector<VkImage> m_depthImages;
-        std::vector<VkDeviceMemory> m_depthImageMemories;
-        std::vector<VkImageView> m_depthImageViews;
-        std::vector<VkImage> m_swapChainImages;
-        std::vector<VkImageView> m_swapChainImageViews;
-        std::vector<VkSemaphore> m_imageAvailableSemaphores;
-        std::vector<VkSemaphore> m_renderFinishedSemaphores;
-        std::vector<VkFence> m_inFlightFences;
-        std::vector<VkFence> m_imagesInFlight;
+        std::vector<VkFramebuffer>  m_swapChainFramebuffers{};
+        std::vector<VkImage>        m_depthImages{};
+        std::vector<VkDeviceMemory> m_depthImageMemories{};
+        std::vector<VkImageView>    m_depthImageViews{};
+        std::vector<VkImage>        m_swapChainImages{};
+        std::vector<VkImageView>    m_swapChainImageViews{};
+        std::vector<VkSemaphore>    m_imageAvailableSemaphores{};
+        std::vector<VkSemaphore>    m_renderFinishedSemaphores{};
+        std::vector<VkFence>        m_inFlightFences{};
+        std::vector<VkFence>        m_imagesInFlight{};
 
-        Index_t m_currentFrame = 0;
+        Index_t                     m_currentFrame{ 0 };
     };
 }
  

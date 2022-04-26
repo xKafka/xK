@@ -27,15 +27,15 @@ namespace xk::graphics_engine::vulkan
 {
     struct SwapChainSupportDetails
     {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
+        VkSurfaceCapabilitiesKHR        capabilities{};
+        std::vector<VkSurfaceFormatKHR> formats{};
+        std::vector<VkPresentModeKHR>   presentModes{};
     };
 
     struct QueueFamilyIndices
     {
-        std::optional<u32> graphicsFamily;
-        std::optional<u32> presentFamily;
+        std::optional<u32> graphicsFamily{};
+        std::optional<u32> presentFamily{};
 
         [[nodiscard]] inline auto isComplete() const -> bool { return graphicsFamily.has_value() && presentFamily.has_value(); }
     };
@@ -118,6 +118,10 @@ namespace xk::graphics_engine::vulkan
         [[nodiscard]] inline auto& getGraphicsQueue() const { return m_graphicsQueue; }
 
         [[nodiscard]] inline auto& getPresentQueue() const{ return m_presentQueue; }
+
+        [[nodiscard]] inline auto getSwapChainSupport() const { return querySwapChainSupport(m_gpu); }
+
+        [[nodiscard]] inline auto findPhysicalQueueFamilies() const { return findQueueFamilies(m_gpu); }
 
     private:
         //VkInstance is a gateway to all the Vulkan functions
