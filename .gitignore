@@ -1233,3 +1233,4 @@ external/spdlog-1.x/tests/test_systemd.cpp
 external/spdlog-1.x/tests/test_time_point.cpp
 external/spdlog-1.x/tests/utils.cpp
 external/spdlog-1.x/tests/utils.h
+external/
